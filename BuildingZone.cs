@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using TMPro; // Needed for Text
+using UnityEngine.Events;
 
 public class BuildingZone : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class BuildingZone : MonoBehaviour
     public TextMeshPro textDisplay; // "0/10"
     public Transform targetCenter; // where the logs fly to
     
+    [Header("Events")]
+    public UnityEvent OnBuildingComplete;
+
     private int currentWood = 0;
     private float timer;
 
@@ -102,5 +106,8 @@ public class BuildingZone : MonoBehaviour
 
         // TODO: Notify the Campfire Manager that we are done!
         Debug.Log("Building Complete!");
+        
+        // Notify listeners
+        OnBuildingComplete.Invoke();
     }
 }

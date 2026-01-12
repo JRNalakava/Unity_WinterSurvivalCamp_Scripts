@@ -7,16 +7,45 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private Animator animator;
 
+    // Physics Polish State
+    private bool isAttacking = false;
+    private float defaultMass;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        if (rb != null) defaultMass = rb.mass;
+
         // If you don't have animations yet, this line might error. 
         // Comment it out if you haven't set up the Animator.
         animator = GetComponentInChildren<Animator>(); 
     }
 
+    public void SetAttackingState(bool attacking)
+    {
+        isAttacking = attacking;
+        if (rb != null)
+        {
+            // "Mass Spike" to prevent pushing
+            rb.mass = attacking ? 2000f : defaultMass;
+            
+            // Stop sliding instantly
+            if (attacking) rb.velocity = Vector3.zero;
+        }
+    }
+
     void FixedUpdate()
     {
+        // 1. Input Lock during attack
+        if (isAttacking) 
+        {
+             // Force stop velocity to prevent sliding
+             rb.velocity = Vector3.zero;
+             // Keep animation as "Idle" (or whatever attack implies)
+             if(animator != null) animator.SetBool("IsMoving", false);
+             return; 
+        }
+
         // Get Input (Keyboard OR Joystick)
         float moveX = Input.GetAxis("Horizontal") + (joystick != null ? joystick.Horizontal : 0);
         float moveZ = Input.GetAxis("Vertical") + (joystick != null ? joystick.Vertical : 0);

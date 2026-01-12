@@ -7,6 +7,7 @@ public class PlayerCollector : MonoBehaviour
     public float magnetRadius = 5f;
     public int woodCount = 0;
     public int stoneCount = 0;
+    public int meatCount = 0;
 
     [Header("Components")]
     public Animator animator;
@@ -64,6 +65,10 @@ public class PlayerCollector : MonoBehaviour
         else if (type == Harvestable.ResourceType.Stone)
         {
             stoneCount += amount;
+        }
+        else if (type == Harvestable.ResourceType.Meat)
+        {
+            meatCount += amount;
         }
         
         if (backpack != null) backpack.UpdateBackpack(woodCount, stoneCount);

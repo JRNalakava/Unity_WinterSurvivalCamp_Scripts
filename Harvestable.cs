@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Harvestable : MonoBehaviour
 {
-    public enum ResourceType { Wood, Stone }
+    public enum ResourceType { Wood, Stone, Meat }
 
     [Header("Stats")]
     public ResourceType type = ResourceType.Wood;
@@ -115,17 +115,7 @@ public class Harvestable : MonoBehaviour
     {
         if (resourcePrefab != null)
         {
-            for (int i = 0; i < resourceAmount; i++)
-            {
-                Vector3 spawnPos = transform.position + Vector3.up * 1.5f + Random.insideUnitSphere * 0.5f;
-                GameObject loot = Instantiate(resourcePrefab, spawnPos, Quaternion.identity);
-
-                if(loot.TryGetComponent(out Rigidbody rb))
-                {
-                    rb.AddForce((Random.insideUnitSphere + Vector3.up).normalized * explosionForce);
-                    rb.AddTorque(Random.insideUnitSphere * explosionForce);
-                }
-            }
+            LootSpawner.Spawn(resourcePrefab, transform.position, resourceAmount, explosionForce);
         }
 
         if (currentChopper != null) currentChopper.SetChoppingState(false);
