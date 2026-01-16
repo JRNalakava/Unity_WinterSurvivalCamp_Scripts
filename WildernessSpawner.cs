@@ -18,7 +18,8 @@ public class WildernessSpawner : MonoBehaviour
     public List<Transform> explicitSpawnPoints;
 
     [Header("Debug")]
-    [SerializeField] private List<GameObject> spawnedInstances = new List<GameObject>();
+    // [SerializeField] private List<GameObject> spawnedInstances = new List<GameObject>(); // Causes errors if items deleted inspecting
+    private List<GameObject> spawnedInstances = new List<GameObject>(); // Hidden from Inspector to prevent errors
 
     private void Start()
     {
