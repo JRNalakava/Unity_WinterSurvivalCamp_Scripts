@@ -6,6 +6,8 @@ public class CampfireManager : MonoBehaviour
     public int totalDefenses = 4;
     public GameObject safeZoneParticles;
 
+    public static event System.Action OnFortressSecureEvent;
+
     private int _currentBuilt = 0;
 
     public void RegisterDefenseBuilt()
@@ -22,6 +24,8 @@ public class CampfireManager : MonoBehaviour
     private void FortressSecure()
     {
         Debug.Log("FORTRESS SECURE! PHASE 2 STARTED!");
+
+        OnFortressSecureEvent?.Invoke();
 
         if (safeZoneParticles != null)
         {

@@ -21,6 +21,9 @@ public class EnemyAI : MonoBehaviour
     public float chaseSpeed = 5f;
     public LayerMask targetMask; // Includes Player and Gates
 
+    [Header("Phase Settings")]
+    public bool startsPassive = true;
+
     [Header("Debug")]
     public State currentState;
     public Transform currentTarget;
@@ -28,6 +31,7 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent agent;
     private Animator animator;
     private float attackTimer;
+    private bool isPassive;
 
     private void Awake()
     {
@@ -39,6 +43,9 @@ public class EnemyAI : MonoBehaviour
     {
         currentState = State.Wander;
         attackTimer = 0f;
+        isPassive = startsPassive;
+
+        CampfireManager.OnFortressSecureEvent += OnFortressSecure;
         
         agent.speed = wanderSpeed;
         SetRandomDestination();
@@ -59,7 +66,7 @@ public class EnemyAI : MonoBehaviour
         {
             case State.Wander:
                 HandleWander();
-                CheckForDetection();
+                if (!isPassive) CheckForDetection();
                 break;
 
             case State.Chase:
@@ -70,6 +77,16 @@ public class EnemyAI : MonoBehaviour
                 HandleAttack();
                 break;
         }
+    }
+
+    private void OnDestroy()
+    {
+        CampfireManager.OnFortressSecureEvent -= OnFortressSecure;
+    }
+
+    private void OnFortressSecure()
+    {
+        isPassive = false;
     }
 
     private void HandleWander()
