@@ -8,13 +8,13 @@ public class WeaponHitbox : RaycastHurtbox
     public override Vector3 GetTipPosition()
     {
         // Simple forward projection from the transform (the handle/hand)
-        return transform.position + transform.forward * weaponLength;
+        return transform.position + transform.up * weaponLength;
     }
     
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Vector3 tip = transform.position + transform.forward * weaponLength;
+        Vector3 tip = transform.position + transform.up * weaponLength;
         Gizmos.DrawLine(transform.position, tip);
         Gizmos.DrawWireSphere(tip, hitRadius);
     }
