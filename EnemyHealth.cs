@@ -10,6 +10,7 @@ public class EnemyHealth : MonoBehaviour
     private NavMeshAgent agent;
     private EnemyAI enemyAI;
     private Collider enemyCollider;
+    private CombatFeedback combatFeedback;
 
     public GameObject[] meatPrefabs;
     public float explosionForce = 300f; // NEW: Exposed for tuning
@@ -27,6 +28,7 @@ public class EnemyHealth : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         enemyAI = GetComponent<EnemyAI>();
         enemyCollider = GetComponent<Collider>();
+        combatFeedback = GetComponent<CombatFeedback>();
     }
 
     private void Start()
@@ -55,6 +57,8 @@ public class EnemyHealth : MonoBehaviour
 
         currentHealth -= amount;
         Debug.Log($"Enemy took {amount} damage. HP: {currentHealth}");
+
+        if (combatFeedback != null) combatFeedback.OnHit();
 
         // Optional: Trigger "Hit" animation
         // animator.SetTrigger("Hit");

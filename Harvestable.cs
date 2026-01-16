@@ -10,12 +10,6 @@ public class Harvestable : MonoBehaviour
     [Tooltip("Total hits required to break the tree")]
     public int hitsToBreak = 3; 
 
-    [Header("Timing")]
-    [Tooltip("Delay before the FIRST hit (matches animation windup)")]
-    public float windupTime = 0.4f; 
-    [Tooltip("Time between subsequent hits")]
-    public float chopInterval = 1.0f; 
-
     [Header("Loot")]
     public GameObject resourcePrefab; 
     public int resourceAmount = 3; 
@@ -23,89 +17,38 @@ public class Harvestable : MonoBehaviour
 
     [Header("Visuals")]
     public GameObject visualModel; 
-
-    private int currentHealth;
-    private bool isPlayerInZone = false;
-    private PlayerCollector currentChopper;
     
-    // THE SAFETY LOCK 🔒 (Prevents Double Hits)
-    private Coroutine choppingRoutine; 
+    private int currentHits;
+    private CombatFeedback combatFeedback;
+    private PlayerCollector currentChopper; // Kept for legacy compatibility if other scripts check this, but largely unused
+
+    void Awake()
+    {
+        combatFeedback = GetComponent<CombatFeedback>();
+    }
 
     void Start()
     {
-        currentHealth = hitsToBreak;
-        // Safety: Ensure we never have 0 interval (causes instant death)
-        if (chopInterval < 0.1f) chopInterval = 1.0f; 
+        currentHits = hitsToBreak;
     }
 
-    void OnTriggerEnter(Collider other)
+    public void TakeHit()
     {
-        if (other.CompareTag("Player"))
+        currentHits--;
+        Debug.Log($"Chop! Hits Left: {currentHits}");
+
+        if (combatFeedback != null)
         {
-            // 1. FILTER: Ignore Magnets/Sensors
-            if (other.isTrigger) return; 
-
-            // 2. LOCK CHECK: If chopping already, ignore this collider
-            if (choppingRoutine != null) return;
-
-            currentChopper = other.GetComponent<PlayerCollector>();
-            if (currentChopper != null)
-            {
-                isPlayerInZone = true;
-                currentChopper.SetChoppingState(true);
-                
-                // 3. START & SAVE the routine
-                choppingRoutine = StartCoroutine(ChopLoop());
-            }
+            combatFeedback.OnHit();
         }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
+        else 
         {
-            if (other.isTrigger) return; // Ignore magnets leaving
-
-            isPlayerInZone = false;
-            
-            // Clean up
-            if (choppingRoutine != null)
-            {
-                StopCoroutine(choppingRoutine);
-                choppingRoutine = null;
-            }
-            
-            if (currentChopper != null)
-            {
-                currentChopper.SetChoppingState(false);
-                currentChopper = null;
-            }
+            // Fallback if no CombatFeedback component
+            if (visualModel == null) visualModel = gameObject; // Ensure we have something to shake
+            StartCoroutine(ShakeVisual());
         }
-    }
 
-    IEnumerator ChopLoop()
-    {
-        // STEP 1: Fast First Hit (Matches the first swing animation)
-        yield return new WaitForSeconds(windupTime);
-        if(isPlayerInZone) TakeDamage();
-
-        // STEP 2: Rhythm Hits (Matches the looping animation)
-        while (isPlayerInZone && currentHealth > 0)
-        {
-            yield return new WaitForSeconds(chopInterval);
-            if(isPlayerInZone) TakeDamage();
-        }
-    }
-
-    void TakeDamage()
-    {
-        currentHealth--;
-        Debug.Log($"Chop! Health Remaining: {currentHealth}");
-
-        // Wobble Effect
-        if (visualModel != null) StartCoroutine(ShakeVisual());
-
-        if (currentHealth <= 0)
+        if (currentHits <= 0)
         {
             Harvest();
         }
@@ -113,20 +56,54 @@ public class Harvestable : MonoBehaviour
 
     void Harvest()
     {
+        Debug.Log($"Harvesting {gameObject.name}!");
         if (resourcePrefab != null)
         {
             LootSpawner.Spawn(resourcePrefab, transform.position, resourceAmount, explosionForce);
         }
 
-        if (currentChopper != null) currentChopper.SetChoppingState(false);
+        // Fix Infinite Chop: Force player to stop chopping before we destroy the trigger
+        if (currentChopper != null)
+        {
+            currentChopper.SetChoppingState(false);
+            currentChopper = null;
+        }
+
         Destroy(gameObject);
     }
 
+    // Fallback Legacy Wobble (Kept in case CombatFeedback isn't used)
     IEnumerator ShakeVisual()
     {
         Vector3 originalScale = visualModel.transform.localScale;
         visualModel.transform.localScale = originalScale * 1.2f;
         yield return new WaitForSeconds(0.1f);
         visualModel.transform.localScale = originalScale;
+    }
+
+    // TRIGGERS can be used solely for setting the "IsChopping" ANIMATION state on the player
+    // but the actual damage comes from the axe hit.
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player") && !other.isTrigger)
+        {
+            currentChopper = other.GetComponent<PlayerCollector>();
+            if (currentChopper != null)
+            {
+                currentChopper.SetChoppingState(true);
+            }
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player") && !other.isTrigger)
+        {
+            if (currentChopper != null)
+            {
+                currentChopper.SetChoppingState(false);
+                currentChopper = null;
+            }
+        }
     }
 }

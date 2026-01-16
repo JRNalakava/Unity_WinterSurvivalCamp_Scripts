@@ -5,11 +5,12 @@ public class PlayerCombat : MonoBehaviour
     [Header("Settings")]
     public float attackRange = 2f;
     public float attackCooldown = 1.0f;
-    public float attackLockDuration = 1.0f; // NEW: Higher default for better "weight"
+    public float attackLockDuration = 1.0f; 
     public LayerMask enemyLayer;
 
     [Header("References")]
-    public Weapon currentWeapon;
+    [Header("References")]
+    public RaycastHurtbox currentWeapon;
     private Animator animator;
     private PlayerController playerController;
 
@@ -94,9 +95,7 @@ public class PlayerCombat : MonoBehaviour
         // Physics Polish: Lock movement & increase mass
         if (playerController != null) StartCoroutine(AttackLockRoutine());
 
-        // Deal Damage
-        float damage = (currentWeapon != null) ? currentWeapon.damage : 5f; // Default 5 damage if no weapon
-        target.TakeDamage(damage);
+        // Note: Damage is now handled by the WeaponHitbox via Animation Events (StartAttack/EndAttack)
 
         // Reset cooldown
         attackTimer = attackCooldown;
@@ -108,6 +107,23 @@ public class PlayerCombat : MonoBehaviour
         // Lock for approx swing duration
         yield return new WaitForSeconds(attackLockDuration); 
         playerController.SetAttackingState(false);
+    }
+
+    // --- ANIMATION EVENTS ---
+    public void ActivateHitbox()
+    {
+        if (currentWeapon != null)
+        {
+            currentWeapon.StartAttack();
+        }
+    }
+
+    public void DeactivateHitbox()
+    {
+         if (currentWeapon != null)
+        {
+            currentWeapon.EndAttack();
+        }
     }
 
     private void OnDrawGizmosSelected()

@@ -83,6 +83,14 @@ public abstract class RaycastHurtbox : MonoBehaviour
 
     protected virtual void ApplyDamage(Collider col)
     {
+        // Try Generic IDamageable (or Harvestable which acts like one)
+        Harvestable harvestable = col.GetComponent<Harvestable>();
+        if (harvestable != null)
+        {
+            harvestable.TakeHit();
+            return;
+        }
+
         // Try EnemyHealth (if player is attacking)
         EnemyHealth enemy = col.GetComponent<EnemyHealth>();
         if (enemy != null)
@@ -98,8 +106,6 @@ public abstract class RaycastHurtbox : MonoBehaviour
            player.TakeDamage(damage);
            return;
         }
-
-        // Try generic IDamageable if you have one later
     }
 
     private void OnDrawGizmos()
